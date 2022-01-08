@@ -1,0 +1,4 @@
+todo:
+1. Dla ARP stworzyc packet out, to i tak jest pojedyczny pakiet, flow mu niepotrzebne.
+Zdecydowanie latwiej jest zmieniac wartosci tworzac pakiet/ramke od zera niz podmieniac w przeplywie.
+2. Dla L3 normalnie przeplywy z zamiana IP.

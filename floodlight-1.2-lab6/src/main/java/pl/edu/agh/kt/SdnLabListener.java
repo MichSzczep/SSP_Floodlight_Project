@@ -6,6 +6,8 @@ import java.util.Map;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.types.IPv4Address;
+import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFPort;
 
 import net.floodlightcontroller.core.FloodlightContext;
@@ -18,6 +20,7 @@ import net.floodlightcontroller.core.module.IFloodlightService;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.packet.ARP;
+import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPv4;
 
 import java.util.ArrayList;
@@ -30,6 +33,8 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 	protected IFloodlightProviderService floodlightProvider;
 	protected static Logger logger;
 	protected IPv4 ipv4;
+	IPv4Address new_IP;
+	MacAddress new_mac;
 
 	@Override
 	public String getName() {
@@ -100,7 +105,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 				}
 				
 			}	
-			// ADD FLOW 
+			//Add Flow
 			Flows.simpleAdd(sw, outPort, pin, cntx);
 			
 		} else {
@@ -108,32 +113,37 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 			outPort = OFPort.of(0);
 			
 			if (pin.getInPort() == OFPort.of(2) || pin.getInPort() == OFPort.of(3)){
-				outPort=OFPort.of(1);
-			} else {
 				
+				new_IP = IPv4Address.of("10.0.0.10");
+				outPort=OFPort.of(1);
+				Flows.simpleAdd(sw, outPort, pin, cntx, new_IP, 1);
+				
+			} else {
 				if (ipv4==null && arp!=null) {
 					logger.info("Dest Protocol Address: {}, Hardware Address: {}", arp.getTargetProtocolAddress(), arp.getTargetHardwareAddress());
-					if (arp.getTargetProtocolAddress().toString().matches("10.0.0.4")) {
-						outPort=OFPort.of(2);
-					} else if (arp.getTargetProtocolAddress().toString().matches("10.0.0.5")) {
-						outPort=OFPort.of(3);
+					if (arp.getTargetProtocolAddress().toString().matches("10.0.0.10")) {
+						new_mac = MacAddress.of("16:56:01:e2:25:f5");
+						outPort=OFPort.of(1);
 					} else {
 						logger.error("Incoming ARP packet from Port 1 switch: {} has non-matching destination IP address: {}",sw.getId(), arp.getTargetProtocolAddress());
 					}
 				} else if (ipv4!=null && arp==null) {
+					new_IP = ipv4.getDestinationAddress();
 					logger.warn("Dest IP: {}", ipv4.getDestinationAddress());
 					if (ipv4.getDestinationAddress().toString().matches("10.0.0.4")) {
 						outPort=OFPort.of(2);
 					} else if (ipv4.getDestinationAddress().toString().matches("10.0.0.5")) {
 						outPort=OFPort.of(3);
+					} else if (ipv4.getDestinationAddress().toString().matches("10.0.0.10")) {
+						new_IP = IPv4Address.of("10.0.0.5");
+						outPort=OFPort.of(3);
 					} else {
 						logger.error("Incoming packet from Port 1 switch: {} has non-matching destination IP address: {}",sw.getId(), ipv4.getDestinationAddress());
 					}
 				}
-				
+				//Add Flow
+				Flows.simpleAdd(sw, outPort, pin, cntx, new_IP, 0);
 			}
-			// ADD FLOW 
-			Flows.simpleAdd(sw, outPort, pin, cntx);
 			
 		}
 		

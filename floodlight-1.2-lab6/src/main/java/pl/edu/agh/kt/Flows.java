@@ -9,6 +9,11 @@ import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFPacketOut;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetDlDst;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetDlSrc;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetNwDst;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetNwDst.Builder;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetNwSrc;
 import org.projectfloodlight.openflow.protocol.match.Match;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.EthType;
@@ -25,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.packet.ARP;
 import net.floodlightcontroller.packet.Data;
 import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPv4;
@@ -43,14 +49,15 @@ public class Flows {
 	protected static boolean FLOWMOD_DEFAULT_MATCH_MAC = true;
 	protected static boolean FLOWMOD_DEFAULT_MATCH_IP_ADDR = true;
 	protected static boolean FLOWMOD_DEFAULT_MATCH_TRANSPORT = true;
+	
+	static OFActionSetNwDst.Builder ip_addr;
 
 	public Flows() {
 		logger.info("Flows() begin/end");
 	}
+	
+	
 
-
-
-	//TODO punkt 3 instrukcji do laboratorium 6
 	public static void simpleAdd(IOFSwitch sw, OFPort outPort, OFPacketIn pin,FloodlightContext cntx) {
 		// FlowModBuilder
 		OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowAdd();
@@ -62,10 +69,95 @@ public class Flows {
 
 		// actions
 		OFActionOutput.Builder aob = sw.getOFFactory().actions().buildOutput();
-		List<OFAction> actions = new ArrayList<OFAction>();
 		aob.setPort(outPort);
 		aob.setMaxLen(Integer.MAX_VALUE);
-		actions.add(aob.build());		
+		List<OFAction> actions = new ArrayList<OFAction>();
+		actions.add(aob.build());
+		
+		
+		fmb.setMatch(m)
+		.setIdleTimeout(FLOWMOD_DEFAULT_IDLE_TIMEOUT)
+		.setHardTimeout(FLOWMOD_DEFAULT_HARD_TIMEOUT)
+		.setBufferId(pin.getBufferId())
+		.setOutPort(outPort)
+		.setPriority(FLOWMOD_DEFAULT_PRIORITY);
+		fmb.setActions(actions);
+		
+		// write flow to switch
+		try {
+			sw.write(fmb.build());
+			logger.info("Flow from port {} forwarded to port {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+		} catch (Exception e) {
+			logger.error("error {}", e);
+		}
+		
+	}
+
+	//TODO punkt 3 instrukcji do laboratorium 6
+	public static void simpleAdd(IOFSwitch sw, OFPort outPort, OFPacketIn pin,FloodlightContext cntx, IPv4Address ipv4, int direction) {
+		// FlowModBuilder
+		OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowAdd();
+
+		// match
+		//Match.Builder mb = sw.getOFFactory().buildMatch();
+		//mb.setExact(MatchField.IN_PORT, pin.getInPort());
+		Match m = createMatchFromPacket(sw, pin.getInPort(), cntx);
+
+		// actions
+		if (direction==1) {
+			ip_addr = (Builder) sw.getOFFactory().actions().buildSetNwSrc();
+		} else {
+			ip_addr = sw.getOFFactory().actions().buildSetNwDst();
+		}
+		
+		ip_addr.setNwAddr(ipv4);
+		OFActionOutput.Builder aob = sw.getOFFactory().actions().buildOutput();
+		aob.setPort(outPort);
+		aob.setMaxLen(Integer.MAX_VALUE);
+		List<OFAction> actions = new ArrayList<OFAction>();
+		actions.add(ip_addr.build());
+		actions.add(aob.build());
+		
+		
+		fmb.setMatch(m)
+		.setIdleTimeout(FLOWMOD_DEFAULT_IDLE_TIMEOUT)
+		.setHardTimeout(FLOWMOD_DEFAULT_HARD_TIMEOUT)
+		.setBufferId(pin.getBufferId())
+		.setOutPort(outPort)
+		.setPriority(FLOWMOD_DEFAULT_PRIORITY);
+		fmb.setActions(actions);
+		
+		// write flow to switch
+		try {
+			sw.write(fmb.build());
+			logger.info("Flow from port {} forwarded to port {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+		} catch (Exception e) {
+			logger.error("error {}", e);
+		}
+		
+	}
+	
+	public static void simpleAdd(IOFSwitch sw, OFPort outPort, OFPacketIn pin,FloodlightContext cntx, MacAddress mac, ARP arp) {
+		// FlowModBuilder
+		OFFlowMod.Builder fmb = sw.getOFFactory().buildFlowAdd();
+
+		// match
+		//Match.Builder mb = sw.getOFFactory().buildMatch();
+		//mb.setExact(MatchField.IN_PORT, pin.getInPort());
+		Match m = createMatchFromPacket(sw, pin.getInPort(), cntx);
+
+		// actions
+		OFActionSetDlDst.Builder dstMac = sw.getOFFactory().actions().buildSetDlDst();
+		OFActionSetDlSrc.Builder srcMac = sw.getOFFactory().actions().buildSetDlSrc();
+		dstMac.setDlAddr(arp.getSenderHardwareAddress());
+		srcMac.setDlAddr(mac);
+		OFActionOutput.Builder aob = sw.getOFFactory().actions().buildOutput();
+		aob.setPort(outPort);
+		aob.setMaxLen(Integer.MAX_VALUE);
+		List<OFAction> actions = new ArrayList<OFAction>();
+		actions.add(dstMac.build());
+		actions.add(srcMac.build());
+		actions.add(aob.build());
 		
 		
 		fmb.setMatch(m)

@@ -77,5 +77,9 @@ public class PacketExtractor {
 	public ARP getARP() {
 		return arp;
 	}
+	
+	public Ethernet getEth() {
+		return eth;
+	}
 
 }
