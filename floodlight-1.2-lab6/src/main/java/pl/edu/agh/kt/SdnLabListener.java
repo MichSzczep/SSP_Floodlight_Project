@@ -86,7 +86,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 						logger.error("Incoming ARP packet from Port 1 switch: {} has non-matching destination IP address: {}",sw.getId(), arp.getTargetProtocolAddress());
 					}
 					
-				} else {
+				} else if (ipv4!=null && arp==null) {
 
 					if (ipv4.getDestinationAddress().toString().matches("10.0.0.1")) {
 						outPort=OFPort.of(1);
@@ -120,7 +120,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 					} else {
 						logger.error("Incoming ARP packet from Port 1 switch: {} has non-matching destination IP address: {}",sw.getId(), arp.getTargetProtocolAddress());
 					}
-				} else {
+				} else if (ipv4!=null && arp==null) {
 					logger.warn("Dest IP: {}", ipv4.getDestinationAddress());
 					if (ipv4.getDestinationAddress().toString().matches("10.0.0.4")) {
 						outPort=OFPort.of(2);
