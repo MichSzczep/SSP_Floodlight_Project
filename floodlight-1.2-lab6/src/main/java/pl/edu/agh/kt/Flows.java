@@ -7,6 +7,7 @@ import java.util.List;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFPacketOut;
+import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
 import org.projectfloodlight.openflow.protocol.action.OFActionSetDlDst;
@@ -16,10 +17,12 @@ import org.projectfloodlight.openflow.protocol.action.OFActionSetNwDst.Builder;
 import org.projectfloodlight.openflow.protocol.action.OFActionSetNwSrc;
 import org.projectfloodlight.openflow.protocol.match.Match;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.types.ArpOpcode;
 import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.IpProtocol;
 import org.projectfloodlight.openflow.types.MacAddress;
+import org.projectfloodlight.openflow.types.OFBufferId;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.OFVlanVidMatch;
 import org.projectfloodlight.openflow.types.TransportPort;
@@ -56,7 +59,71 @@ public class Flows {
 		logger.info("Flows() begin/end");
 	}
 	
-	
+	public static void sendPacketOut(IOFSwitch sw, Ethernet eth, MacAddress sw_mac, ARP arp, OFPort outport) {
+		// Ethernet
+		Ethernet l2 = new Ethernet();
+		l2.setSourceMACAddress(sw_mac);
+		l2.setDestinationMACAddress(eth.getSourceMACAddress());
+		l2.setEtherType(EthType.ARP);
+		
+		// IP
+		ARP new_arp = new ARP();
+		new_arp.setHardwareAddressLength(arp.getHardwareAddressLength());
+		new_arp.setHardwareType(arp.getHardwareType());
+		new_arp.setOpCode(ArpOpcode.of(arp.getOpCode().getOpcode()+1));
+		new_arp.setParent(arp.getParent());
+		new_arp.setPayload(arp.getPayload());
+		new_arp.setProtocolAddressLength(arp.getProtocolAddressLength());
+		new_arp.setProtocolType(arp.getProtocolType());
+		new_arp.setSenderHardwareAddress(MacAddress.of("16:56:01:e2:25:f5"));
+		new_arp.setSenderProtocolAddress(arp.getTargetProtocolAddress());
+		new_arp.setTargetHardwareAddress(arp.getSenderHardwareAddress());
+		new_arp.setTargetProtocolAddress(arp.getSenderProtocolAddress());
+
+		// set the payloads of each layer
+		l2.setPayload(new_arp);
+		
+		// serialize
+		byte[] serializedData = l2.serialize();
+
+		// Create Packet-Out and Write to Switch
+		List<OFAction> actions = new ArrayList<OFAction>();
+		actions.add(sw.getOFFactory().actions().buildOutput().setPort(outport).setMaxLen(0xffFFffFF).build());
+		
+		OFPacketOut po = sw.getOFFactory()
+		.buildPacketOut()
+		.setData(serializedData)
+		.setActions(actions)
+		.setInPort(OFPort.CONTROLLER).build();
+		sw.write(po);
+
+	}
+
+	public static void forwardFirstPacket(IOFSwitch sw, OFPacketIn pi, OFPort outport) {
+
+		OFPort inPort = (pi.getVersion().compareTo(OFVersion.OF_12) < 0 ? pi.getInPort()
+				: pi.getMatch().get(MatchField.IN_PORT));
+		OFPacketOut.Builder pob = sw.getOFFactory().buildPacketOut();
+		List<OFAction> actions = new ArrayList<OFAction>();
+		actions.add(sw.getOFFactory().actions().buildOutput().setPort(outport).setMaxLen(0xffFFffFF).build());
+		pob.setActions(actions);
+
+		if (sw.getBuffers() == 0) {
+			pi = pi.createBuilder().setBufferId(OFBufferId.NO_BUFFER).build();
+			pob.setBufferId(OFBufferId.NO_BUFFER);
+			logger.info("The switch doesn't support buffering");
+		} else {
+			pob.setBufferId(pi.getBufferId());
+		}
+		
+		if (pi.getBufferId() == OFBufferId.NO_BUFFER) {
+			byte[] packetData = pi.getData();
+			pob.setData(packetData);
+		}
+		
+		sw.write(pob.build());
+
+	}
 
 	public static void simpleAdd(IOFSwitch sw, OFPort outPort, OFPacketIn pin,FloodlightContext cntx) {
 		// FlowModBuilder
