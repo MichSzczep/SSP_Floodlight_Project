@@ -6,6 +6,7 @@ import java.util.Map;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFPort;
@@ -64,6 +65,10 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 		ARP arp = extractor.getARP();
 		Ethernet eth = extractor.getEth();
 		
+		if (eth.getEtherType() != EthType.ARP && eth.getEtherType() != EthType.IPv4) {
+			return Command.STOP;
+		}
+		
 		logger.warn("IPv4: {}", ipv4);
 		logger.warn("ARP: {}", arp);
 
@@ -72,11 +77,13 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 		
 		logger.warn("Switch: {}", sw.getId().toString());
 		
-		if (sw.getId().toString().matches("00:00:00:00:00:00:00:01")) {
+		if (sw.getId().toString().matches("00:00:00:00:00:00:00:01")) {			//Switch1
 			outPort = OFPort.of(0);
 			
 			if (pin.getInPort() == OFPort.of(1) || pin.getInPort() == OFPort.of(2) || pin.getInPort() == OFPort.of(3)){
 				outPort=OFPort.of(4);
+				//Flows.simpleAdd(sw, outPort, pin);
+				
 			} else {
 				
 				if (ipv4==null && arp!=null) {
@@ -115,17 +122,18 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 			
 			if (pin.getInPort() == OFPort.of(2) || pin.getInPort() == OFPort.of(3)){
 				
-				new_IP = IPv4Address.of("10.0.0.10");
+				new_IP = IPv4Address.of("10.0.0.4");
 				outPort=OFPort.of(1);
 				Flows.simpleAdd(sw, outPort, pin, cntx, new_IP, 1);
-				
+			} else if (pin.getInPort() == OFPort.of(4))	{
+				outPort=OFPort.of(1);
+				Flows.simpleAdd(sw, outPort, pin, cntx);
 			} else {
 				if (ipv4==null && arp!=null) {
 					logger.info("Dest Protocol Address: {}, Target Hardware Address: {}", arp.getTargetProtocolAddress(), arp.getTargetHardwareAddress());
-					if (arp.getTargetProtocolAddress().toString().matches("10.0.0.10")) {
-						new_mac = MacAddress.of("16:56:01:e2:25:f5");
-						outPort=OFPort.of(1);
-						Flows.sendPacketOut(sw, eth, MacAddress.of("16:56:01:e2:25:f5"), arp, outPort);
+					if (arp.getTargetProtocolAddress().toString().matches("10.0.0.4")) {
+						outPort=OFPort.of(4);
+						Flows.simpleAdd(sw, outPort, pin, cntx);
 					} else {
 						logger.error("Incoming ARP packet from Port 1 switch: {} has non-matching destination IP address: {}",sw.getId(), arp.getTargetProtocolAddress());
 					}
@@ -133,17 +141,14 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 					new_IP = ipv4.getDestinationAddress();
 					logger.warn("Dest IP: {}", ipv4.getDestinationAddress());
 					if (ipv4.getDestinationAddress().toString().matches("10.0.0.4")) {
-						outPort=OFPort.of(2);
-					} else if (ipv4.getDestinationAddress().toString().matches("10.0.0.5")) {
-						outPort=OFPort.of(3);
-					} else if (ipv4.getDestinationAddress().toString().matches("10.0.0.10")) {
 						new_IP = IPv4Address.of("10.0.0.5");
-						outPort=OFPort.of(3);
+						new_mac = MacAddress.of("92:e5:72:42:9d:f7");
+						outPort=OFPort.of(2);
 					} else {
 						logger.error("Incoming packet from Port 1 switch: {} has non-matching destination IP address: {}",sw.getId(), ipv4.getDestinationAddress());
 					}
 					//Add Flow
-					Flows.simpleAdd(sw, outPort, pin, cntx, new_IP, 0);
+					Flows.simpleAdd(sw, outPort, pin, cntx, new_IP, new_mac, 0);
 				}
 				
 			}

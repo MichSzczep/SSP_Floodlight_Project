@@ -12,6 +12,7 @@ class MyTopo( Topo ):
         rightSwitch = self.addSwitch( 'switch2' )
         rightHost1 = self.addHost( 'server1' )
         rightHost2 = self.addHost( 'server2' )
+	rightHost3 = self.addHost( 'proxyArp' )
 
         # Add links
         self.addLink( leftHost1, leftSwitch )
@@ -20,5 +21,6 @@ class MyTopo( Topo ):
         self.addLink( leftSwitch, rightSwitch )
         self.addLink( rightSwitch, rightHost1 )
         self.addLink( rightSwitch, rightHost2 )
+	self.addLink( rightSwitch, rightHost3 )
 
 topos = { 'mytopo': ( lambda: MyTopo() ) }
