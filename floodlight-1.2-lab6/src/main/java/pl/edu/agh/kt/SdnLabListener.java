@@ -82,7 +82,6 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 			
 			if (pin.getInPort() == OFPort.of(1) || pin.getInPort() == OFPort.of(2) || pin.getInPort() == OFPort.of(3)){
 				outPort=OFPort.of(4);
-				//Flows.simpleAdd(sw, outPort, pin);
 				
 			} else {
 				
@@ -120,11 +119,14 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 			
 			outPort = OFPort.of(0);
 			
-			if (pin.getInPort() == OFPort.of(2) || pin.getInPort() == OFPort.of(3)){
+			if ((pin.getInPort() == OFPort.of(2) || pin.getInPort() == OFPort.of(3)) && arp==null){
 				
 				new_IP = IPv4Address.of("10.0.0.4");
 				outPort=OFPort.of(1);
 				Flows.simpleAdd(sw, outPort, pin, cntx, new_IP, 1);
+			} else if ((pin.getInPort() == OFPort.of(2) || pin.getInPort() == OFPort.of(3)) && arp!=null)	{
+				outPort=OFPort.of(1);
+				Flows.simpleAdd(sw, outPort, pin, cntx);
 			} else if (pin.getInPort() == OFPort.of(4))	{
 				outPort=OFPort.of(1);
 				Flows.simpleAdd(sw, outPort, pin, cntx);
@@ -134,6 +136,13 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 					if (arp.getTargetProtocolAddress().toString().matches("10.0.0.4")) {
 						outPort=OFPort.of(4);
 						Flows.simpleAdd(sw, outPort, pin, cntx);
+					} else if (arp.getTargetProtocolAddress().toString().matches("10.0.0.5")) {
+						outPort=OFPort.of(2);
+						logger.warn("Wszed do portu 2 po dopasowaniu IP .5");
+						Flows.simpleAdd(sw, outPort, pin, cntx);
+					} else if (arp.getTargetProtocolAddress().toString().matches("10.0.0.6")) { 
+						outPort=OFPort.of(3);
+						Flows.simpleAdd(sw, outPort, pin, cntx);
 					} else {
 						logger.error("Incoming ARP packet from Port 1 switch: {} has non-matching destination IP address: {}",sw.getId(), arp.getTargetProtocolAddress());
 					}
@@ -141,9 +150,17 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 					new_IP = ipv4.getDestinationAddress();
 					logger.warn("Dest IP: {}", ipv4.getDestinationAddress());
 					if (ipv4.getDestinationAddress().toString().matches("10.0.0.4")) {
-						new_IP = IPv4Address.of("10.0.0.5");
-						new_mac = MacAddress.of("92:e5:72:42:9d:f7");
-						outPort=OFPort.of(2);
+						int hashedvalue = (ipv4.getSourceAddress().toString().hashCode()) % 2;
+						if (hashedvalue==1) {
+							new_IP = IPv4Address.of("10.0.0.5");
+							new_mac = MacAddress.of("d2:48:58:c2:22:60");	//TODO: wprowadzic do minineta ten MAC na stale (server1)
+							outPort=OFPort.of(2);
+						} else {
+							new_IP = IPv4Address.of("10.0.0.6");
+							new_mac = MacAddress.of("f2:ed:f4:98:4f:a6");	//TODO: wprowadzic do minineta ten MAC na stale (server2)
+							outPort=OFPort.of(3);
+						}
+						
 					} else {
 						logger.error("Incoming packet from Port 1 switch: {} has non-matching destination IP address: {}",sw.getId(), ipv4.getDestinationAddress());
 					}
