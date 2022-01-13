@@ -36,6 +36,8 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 	protected IPv4 ipv4;
 	IPv4Address new_IP;
 	MacAddress new_mac;
+	MacAddress server1;
+	MacAddress server2;
 
 	@Override
 	public String getName() {
@@ -138,7 +140,6 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 						Flows.simpleAdd(sw, outPort, pin, cntx);
 					} else if (arp.getTargetProtocolAddress().toString().matches("10.0.0.5")) {
 						outPort=OFPort.of(2);
-						logger.warn("Wszed do portu 2 po dopasowaniu IP .5");
 						Flows.simpleAdd(sw, outPort, pin, cntx);
 					} else if (arp.getTargetProtocolAddress().toString().matches("10.0.0.6")) { 
 						outPort=OFPort.of(3);
@@ -152,12 +153,14 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 					if (ipv4.getDestinationAddress().toString().matches("10.0.0.4")) {
 						int hashedvalue = (ipv4.getSourceAddress().toString().hashCode()) % 2;
 						if (hashedvalue==1) {
+							logger.warn("MAC podawany do pakietu: {}", server1);
 							new_IP = IPv4Address.of("10.0.0.5");
-							new_mac = MacAddress.of("d2:48:58:c2:22:60");	//TODO: wprowadzic do minineta ten MAC na stale (server1)
+							new_mac = MacAddress.of("00:00:00:00:00:05");	//TODO: wprowadzic do minineta ten MAC na stale (server1)
 							outPort=OFPort.of(2);
 						} else {
+							logger.warn("MAC podawany do pakietu: {}", server2);
 							new_IP = IPv4Address.of("10.0.0.6");
-							new_mac = MacAddress.of("f2:ed:f4:98:4f:a6");	//TODO: wprowadzic do minineta ten MAC na stale (server2)
+							new_mac = MacAddress.of("00:00:00:00:00:06");	//TODO: wprowadzic do minineta ten MAC na stale (server2)
 							outPort=OFPort.of(3);
 						}
 						
