@@ -59,7 +59,7 @@ public class Flows {
 	static OFActionSetDlDst.Builder mac_addr_dst;
 
 	public Flows() {
-		logger.info("Flows() begin/end");
+		//logger.info("Flows() begin/end");
 	}
 	
 	public static void sendPacketOut(IOFSwitch sw, Ethernet eth, MacAddress sw_mac, ARP arp, OFPort outport) {
@@ -194,7 +194,7 @@ public class Flows {
 		// write flow to switch
 		try {
 			sw.write(fmb.build());
-			logger.info("Flow from port {} forwarded to port {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+			//logger.info("Flow from port {} forwarded to port {} on switch {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), sw.getId(), m.toString() });
 		} catch (Exception e) {
 			logger.error("error {}", e);
 		}
@@ -234,7 +234,7 @@ public class Flows {
 			// write flow to switch
 			try {
 				sw.write(fmb.build());
-				logger.info("Flow from port {} forwarded to port {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+				//logger.info("Flow from port {} forwarded to port {} on switch {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), sw.getId(), m.toString() });
 			} catch (Exception e) {
 				logger.error("error {}", e);
 			}
@@ -262,7 +262,7 @@ public class Flows {
 			// write flow to switch
 			try {
 				sw.write(fmb.build());
-				logger.info("Flow from port {} forwarded to port {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+				//logger.info("Flow from port {} forwarded to port {} on switch {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), sw.getId(), m.toString() });
 			} catch (Exception e) {
 				logger.error("error {}", e);
 			}
@@ -306,7 +306,7 @@ public class Flows {
 			// write flow to switch
 			try {
 				sw.write(fmb.build());
-				logger.info("Flow from port {} forwarded to port {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+				//logger.info("Flow from port {} forwarded to port {} on switch {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), sw.getId(), m.toString() });
 			} catch (Exception e) {
 				logger.error("error {}", e);
 			}
@@ -337,7 +337,7 @@ public class Flows {
 			// write flow to switch
 			try {
 				sw.write(fmb.build());
-				logger.info("Flow from port {} forwarded to port {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+				//logger.info("Flow from port {} forwarded to port {} on switch {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), sw.getId(), m.toString() });
 			} catch (Exception e) {
 				logger.error("error {}", e);
 			}
@@ -379,7 +379,7 @@ public class Flows {
 		// write flow to switch
 		try {
 			sw.write(fmb.build());
-			logger.info("Flow from port {} forwarded to port {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), m.toString() });
+			//logger.info("Flow from port {} forwarded to port {} on switch {}; match: {}", new Object[] { pin.getInPort().getPortNumber(), outPort.getPortNumber(), sw.getId(), m.toString() });
 		} catch (Exception e) {
 			logger.error("error {}", e);
 		}

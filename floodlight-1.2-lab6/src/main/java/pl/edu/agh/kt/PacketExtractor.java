@@ -27,11 +27,11 @@ public class PacketExtractor {
 	public PacketExtractor(FloodlightContext cntx, OFMessage msg) {
 		this.cntx = cntx;
 		this.msg = msg;
-		logger.info("PacketExtractor: Constructor method called");
+		//logger.info("PacketExtractor: Constructor method called");
 	}
 
 	public PacketExtractor() {
-		logger.info("PacketExtractor: Constructor method called");
+		//logger.info("PacketExtractor: Constructor method called");
 	}
 
 	public void packetExtract(FloodlightContext cntx) {
@@ -41,9 +41,9 @@ public class PacketExtractor {
 
 	public void extractEth() {
 		eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
-		logger.info("Frame: src mac {}", eth.getSourceMACAddress());
-		logger.info("Frame: dst mac {}", eth.getDestinationMACAddress());
-		logger.info("Frame: ether_type {}", eth.getEtherType());
+		//logger.info("Frame: src mac {}", eth.getSourceMACAddress());
+		//logger.info("Frame: dst mac {}", eth.getDestinationMACAddress());
+		//logger.info("Frame: ether_type {}", eth.getEtherType());
 		if (eth.getEtherType() == EthType.ARP) {
 			arp = (ARP) eth.getPayload();
 			extractArp();
@@ -56,14 +56,14 @@ public class PacketExtractor {
 	}
 
 	public void extractArp() {
-		logger.info("ARP extractor");
-		logger.warn("ARP src MAC: {}", arp.getSenderHardwareAddress());
+		//logger.info("ARP extractor");
+		//logger.warn("ARP src MAC: {}", arp.getSenderHardwareAddress());
 		
 	}
 
 	public void extractIp() {
-		logger.info("IP extractor");
-		logger.info("{}", ipv4.getDestinationAddress());
+		//logger.info("IP extractor");
+		//logger.info("{}", ipv4.getDestinationAddress());
 		
 		if (eth.getEtherType() == EthType.IPv4) {
 			ipv4 = (IPv4) eth.getPayload();

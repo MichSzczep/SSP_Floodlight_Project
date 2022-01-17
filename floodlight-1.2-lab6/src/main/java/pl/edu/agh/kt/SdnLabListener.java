@@ -60,7 +60,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 	public net.floodlightcontroller.core.IListener.Command receive(IOFSwitch sw, OFMessage msg,
 			FloodlightContext cntx) {
 
-		logger.info("************* NEW PACKET IN *************");
+		//logger.info("************* NEW PACKET IN *************");
 		PacketExtractor extractor = new PacketExtractor();
 		extractor.packetExtract(cntx);
 		IPv4 ipv4 = extractor.getIPv4();
@@ -71,13 +71,13 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 			return Command.STOP;
 		}
 		
-		logger.warn("IPv4: {}", ipv4);
-		logger.warn("ARP: {}", arp);
+		//logger.warn("IPv4: {}", ipv4);
+		//logger.warn("ARP: {}", arp);
 
 		OFPacketIn pin = (OFPacketIn) msg;
 		OFPort outPort=OFPort.of(0);
 		
-		logger.warn("Switch: {}", sw.getId().toString());
+		//logger.warn("Switch: {}", sw.getId().toString());
 		
 		if (sw.getId().toString().matches("00:00:00:00:00:00:00:01")) {			//Switch1
 			outPort = OFPort.of(0);
@@ -89,7 +89,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 				
 				if (ipv4==null && arp!=null) {
 					
-					logger.info("Dest Protocol Address: {}, Hardware Address: {}", arp.getTargetProtocolAddress(), arp.getTargetHardwareAddress());
+					//logger.info("Dest Protocol Address: {}, Hardware Address: {}", arp.getTargetProtocolAddress(), arp.getTargetHardwareAddress());
 					if (arp.getTargetProtocolAddress().toString().matches("10.0.0.1")) {
 						outPort=OFPort.of(1);
 					} else if (arp.getTargetProtocolAddress().toString().matches("10.0.0.2")) {
@@ -134,7 +134,7 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 				Flows.simpleAdd(sw, outPort, pin, cntx);
 			} else {
 				if (ipv4==null && arp!=null) {
-					logger.info("Dest Protocol Address: {}, Target Hardware Address: {}", arp.getTargetProtocolAddress(), arp.getTargetHardwareAddress());
+					//logger.info("Dest Protocol Address: {}, Target Hardware Address: {}", arp.getTargetProtocolAddress(), arp.getTargetHardwareAddress());
 					if (arp.getTargetProtocolAddress().toString().matches("10.0.0.4")) {
 						outPort=OFPort.of(4);
 						Flows.simpleAdd(sw, outPort, pin, cntx);
@@ -149,18 +149,19 @@ public class SdnLabListener implements IFloodlightModule, IOFMessageListener {
 					}
 				} else if (ipv4!=null && arp==null) {
 					new_IP = ipv4.getDestinationAddress();
-					logger.warn("Dest IP: {}", ipv4.getDestinationAddress());
+					//logger.warn("Dest IP: {}", ipv4.getDestinationAddress());
 					if (ipv4.getDestinationAddress().toString().matches("10.0.0.4")) {
 						int hashedvalue = (ipv4.getSourceAddress().toString().hashCode()) % 2;
+						logger.warn("Funkcja hashujaca src IP dla {} zwrocila {}", ipv4.getSourceAddress(), hashedvalue);
 						if (hashedvalue==1) {
-							logger.warn("MAC podawany do pakietu: {}", server1);
+							logger.info("Zapytanie z klienta o adresie IP {} zostalo przekazane do serwera 1", ipv4.getSourceAddress());
 							new_IP = IPv4Address.of("10.0.0.5");
-							new_mac = MacAddress.of("00:00:00:00:00:05");	//TODO: wprowadzic do minineta ten MAC na stale (server1)
+							new_mac = MacAddress.of("00:00:00:00:00:05");	
 							outPort=OFPort.of(2);
 						} else {
-							logger.warn("MAC podawany do pakietu: {}", server2);
+							logger.info("Zapytanie z klienta o adresie IP {} zostalo przekazane do serwera 2", ipv4.getSourceAddress());
 							new_IP = IPv4Address.of("10.0.0.6");
-							new_mac = MacAddress.of("00:00:00:00:00:06");	//TODO: wprowadzic do minineta ten MAC na stale (server2)
+							new_mac = MacAddress.of("00:00:00:00:00:06");	
 							outPort=OFPort.of(3);
 						}
 						

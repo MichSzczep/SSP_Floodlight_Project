@@ -298,8 +298,8 @@ IFloodlightModule, IInfoProvider {
 		OFPortDesc ofpPort = iofSwitch.getPort(port);
 
 		if (log.isTraceEnabled()) {
-			log.trace("Sending LLDP packet out of swich: {}, port: {}, reverse: {}",
-				new Object[] {iofSwitch.getId().toString(), port.toString(), Boolean.toString(isReverse)});
+			//log.trace("Sending LLDP packet out of swich: {}, port: {}, reverse: {}",
+				//new Object[] {iofSwitch.getId().toString(), port.toString(), Boolean.toString(isReverse)});
 		}
 
 		// using "nearest customer bridge" MAC address for broadest possible
@@ -941,7 +941,7 @@ IFloodlightModule, IInfoProvider {
 
 		if (lldpClock == 0) {
 			if (log.isTraceEnabled())
-				log.trace("Sending LLDP out on all ports.");
+				//log.trace("Sending LLDP out on all ports.");
 			discoverOnAllPorts();
 		}
 	}
@@ -1225,7 +1225,7 @@ IFloodlightModule, IInfoProvider {
 	 * Send LLDPs to all switch-ports
 	 */
 	protected void discoverOnAllPorts() {
-		log.info("Sending LLDP packets out of all the enabled ports");
+		//log.info("Sending LLDP packets out of all the enabled ports");
 		// Send standard LLDPs
 		for (DatapathId sw : switchService.getAllSwitchDpids()) {
 			IOFSwitch iofSwitch = switchService.getSwitch(sw);
