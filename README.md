@@ -9,5 +9,6 @@ Co i jak trzeba uruchomić:
   
   1. Mininet jak wyżej
   2. W mininecie na hostach server1 oraz server 2 uruchomić serwer http poprzez polecenie "python3 -m http.server"
-  3. Na hostach podpisanych jako client1, client2, client3 uruchomić skrypt traffic.sh: ./traffic.sh
-  4. Patrzeć jak wszystko pięknie działa :)
+  3. Uruchomić kontroler
+  4. Na hostach podpisanych jako client1, client2, client3 uruchomić skrypt traffic.sh: ./traffic.sh
+  5. Patrzeć jak wszystko pięknie działa :)
