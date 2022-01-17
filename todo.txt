@@ -1,4 +1,0 @@
-todo:
-1. Znalezc sposob na ustawienie na sztywno mac w mininecie, bo argument mac nie dziala
-2. host 3 cos sie rzadko/wcale pinguje, o luj mu chodzi
-3. sprawdzic na generatorze
